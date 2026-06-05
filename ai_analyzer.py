@@ -121,18 +121,23 @@ def analyze_sentiment(news_text: str) -> dict:
         return fallback_result
 
     try:
-        # 從 st.secrets 中讀取 API 金鑰 (安全第一，不寫死金鑰)
-        api_key = st.secrets["OPENAI_API_KEY"]
+        # 讀取 API 金鑰，優先讀取 GEMINI_API_KEY，其次讀取 OPENAI_API_KEY
+        api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("OPENAI_API_KEY")
+        if not api_key:
+            raise KeyError("找不到 GEMINI_API_KEY 或 OPENAI_API_KEY")
         
         raw_response = ""
         
-        # 呼叫 OpenAI API，同時相容新版 (v1.0.0+) 與舊版 (v0.x) SDK 語法
+        # 呼叫 API，利用 OpenAI 相容介面使用 gemini-flash-lite-latest 模型
         try:
             # 嘗試使用新版 SDK (v1.0.0+)
             from openai import OpenAI
-            client = OpenAI(api_key=api_key)
+            client = OpenAI(
+                api_key=api_key,
+                base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+            )
             completion = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gemini-flash-lite-latest",
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": news_text}
@@ -144,8 +149,9 @@ def analyze_sentiment(news_text: str) -> dict:
             # 降級使用舊版 SDK (v0.x)
             import openai
             openai.api_key = api_key
+            openai.api_base = "https://generativelanguage.googleapis.com/v1beta/openai/"
             completion = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+                model="gemini-flash-lite-latest",
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": news_text}
