@@ -12,7 +12,8 @@
 在專案根目錄建立 `.streamlit/secrets.toml`（此檔已被 .gitignore，不會上傳）：
 
 ```toml
-OPENAI_API_KEY = "你的金鑰"
+GEMINI_API_KEY = "你的 Google Gemini API 金鑰（優先使用）"
+OPENAI_API_KEY = "你的 OpenAI API 金鑰（備用）"
 NEWS_API_KEY = "你的金鑰"
 ```
 
